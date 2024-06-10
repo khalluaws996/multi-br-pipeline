@@ -5,18 +5,23 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    docker.build('food')
+                    def customImage = docker.build('food')
                 }
             }
         }
         stage('Deploy') {
             steps {
                 script {
-                    // Generate a unique container name
-                    def containerName = "food-con-${env.BUILD_ID}"
+                    // Stop and remove the existing container if it exists
+                    try {
+                        sh 'docker stop food-con || true'
+                        sh 'docker rm food-con || true'
+                    } catch (Exception e) {
+                        echo 'No existing container to stop and remove'
+                    }
 
                     // Run the new container
-                    sh "docker run -dt --name ${containerName} -p 90:80 food"
+                    sh 'docker run -dt --name food-con -p 90:80 food'
                 }
             }
         }
